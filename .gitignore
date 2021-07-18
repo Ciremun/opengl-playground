@@ -1,0 +1,8 @@
+.vscode/
+
+*.obj
+*.exe
+*.old
+
+opengl-playground
+nobuild
