@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
         FILE *f = fopen("src/shaders.h", "wb");
         if (f == 0)
-            PANIC("ERROR:%d: opening file %s\n", __LINE__, f);
+            PANIC("ERROR:%d: opening file %s\n", __LINE__, "src/shaders.h");
         fprintf(f, "constexpr const char* VERTEX_SHADER_SOURCE = R\"(%s)\";\n", vertex_shader_source);
         fprintf(f, "constexpr const char* FRAGMENT_SHADER_SOURCE = R\"(%s)\";", fragment_shader_source);
         fclose(f);
