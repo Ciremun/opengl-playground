@@ -62,8 +62,8 @@ int main(int argc, char **argv)
     if (cxx == 0)
         cxx = "g++";
 
-    if (is_path1_modified_after_path2("src/shaders/vertex.glsl", FILENAME) ||
-        is_path1_modified_after_path2("src/shaders/fragment.glsl", FILENAME))
+    if (PATH_EXISTS(FILENAME) && (is_path1_modified_after_path2("src/shaders/vertex.glsl", FILENAME) ||
+        is_path1_modified_after_path2("src/shaders/fragment.glsl", FILENAME)))
     {
         char *vertex_shader_source = read_file_as_str("src/shaders/vertex.glsl", 0);
         char *fragment_shader_source = read_file_as_str("src/shaders/fragment.glsl", 0);
