@@ -11,6 +11,9 @@
 
 #include "shaders.h"
 
+#define WIDTH 1024
+#define HEIGHT 768
+
 #define PANIC(fmt, ...)                                        \
     do                                                         \
     {                                                          \
@@ -92,7 +95,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-    window = glfwCreateWindow(1024, 768, "opengl-playground", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "opengl-playground", nullptr, nullptr);
 
     if (!window)
     {
@@ -117,23 +120,21 @@ int main()
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
     glDepthFunc(GL_LESS);
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    GLuint vertex_array_id;
+    glGenVertexArrays(1, &vertex_array_id);
+    glBindVertexArray(vertex_array_id);
 
-    GLuint programID = load_shaders();
+    GLuint program_id = load_shaders();
 
-    GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+    GLuint matrix_id = glGetUniformLocation(program_id, "MVP");
+    GLuint time_id = glGetUniformLocation(program_id, "time");
 
-    glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
-    glm::mat4 View = glm::lookAt(
-        glm::vec3(4, 3, -3),
-        glm::vec3(0, 0, 0),
-        glm::vec3(0, 1, 0));
-    glm::mat4 Model = glm::mat4(1.0f);
-    glm::mat4 MVP = Projection * View * Model;
+    auto projection = glm::perspective(glm::radians(90.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+    auto model = glm::mat4(1.0f);
 
     static const GLfloat g_vertex_buffer_data[] = {
         -1.0f, -1.0f, -1.0f,
@@ -211,26 +212,37 @@ int main()
         0.820f, 0.883f, 0.371f,
         0.982f, 0.099f, 0.879f};
 
-    GLuint vertexbuffer;
-    glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    GLuint vertex_buffer;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    GLuint colorbuffer;
-    glGenBuffers(1, &colorbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+    GLuint color_buffer;
+    glGenBuffers(1, &color_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+
+    auto position = glm::vec3(2.6, 2.0, 3.5);
+
+    float horizontal_angle = 3.15f;
+    float vertical_angle = -0.63f;
+    float speed = 5.0f;
+    float mouse_speed = 0.1f;
+
+    double dt;
+    double last_frame = glfwGetTime();
 
     do
     {
+        double current_frame = glfwGetTime();
+        dt = current_frame - last_frame;
+        last_frame = current_frame;
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(programID);
-
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
+        glUseProgram(program_id);
 
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
         glVertexAttribPointer(
             0,
             3,
@@ -240,7 +252,7 @@ int main()
             (void *)0);
 
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
         glVertexAttribPointer(
             1,
             3,
@@ -248,6 +260,35 @@ int main()
             GL_FALSE,
             0,
             (void *)0);
+
+        auto direction = glm::vec3(glm::cos(vertical_angle) * glm::sin(horizontal_angle),
+                                   glm::sin(vertical_angle),
+                                   glm::cos(vertical_angle) * glm::cos(horizontal_angle));
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        horizontal_angle += mouse_speed * dt * ((float)WIDTH / 2.0f - xpos);
+        vertical_angle += mouse_speed * dt * ((float)HEIGHT / 2.0f - ypos);
+
+        auto right = glm::vec3(glm::sin(horizontal_angle - 3.14f / 2.0),
+                               0.0f,
+                               glm::cos(horizontal_angle - 3.14 / 2.0));
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            position = position + direction * static_cast<float>(dt) * speed;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            position = position - direction * static_cast<float>(dt) * speed;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            position = position + right * static_cast<float>(dt) * speed;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            position = position - right * static_cast<float>(dt) * speed;
+        glfwSetCursorPos(window, (float)WIDTH / 2.0f, (float)HEIGHT / 2.0f);
+
+        auto view = glm::lookAt(position, position + direction, glm::vec3(0.0f, 1.0f, 0.0f));
+        auto mvp = projection * view * model;
+
+        glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
+        glUniform1f(time_id, current_frame);
 
         glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
 
@@ -258,11 +299,6 @@ int main()
         glfwPollEvents();
 
     } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
-
-    glDeleteBuffers(1, &vertexbuffer);
-    glDeleteBuffers(1, &colorbuffer);
-    glDeleteProgram(programID);
-    glDeleteVertexArrays(1, &VertexArrayID);
 
     glfwTerminate();
 

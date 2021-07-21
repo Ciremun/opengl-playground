@@ -1,15 +1,13 @@
 #version 330 core
 
-// Interpolated values from the vertex shaders
 in vec3 fragmentColor;
+in float fragmentTime;
 
-// Ouput data
 out vec3 color;
 
-void main(){
-
-	// Output color = color specified in the vertex shader, 
-	// interpolated between all 3 surrounding vertices
-	color = fragmentColor;
-
+void main()
+{
+    color = vec3(fragmentColor.x + abs(sin(fragmentTime)) / 10,
+                 fragmentColor.y + abs(cos(fragmentTime)) / 10,
+                 cos(fragmentTime));
 }

@@ -1,37 +1,31 @@
 constexpr const char* VERTEX_SHADER_SOURCE = R"(#version 330 core
 
-// Input vertex data, different for all executions of this shader.
-layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec3 vertexColor;
 
-// Output data ; will be interpolated for each fragment.
-out vec3 fragmentColor;
-// Values that stay constant for the whole mesh.
 uniform mat4 MVP;
+uniform float time;
 
-void main(){	
+out vec3 fragmentColor;
+out float fragmentTime;
 
-	// Output position of the vertex, in clip space : MVP * position
-	gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
-
-	// The color of each vertex will be interpolated
-	// to produce the color of each fragment
-	fragmentColor = vertexColor;
+void main()
+{
+    gl_Position = MVP * vec4(vertexPosition, 1);
+    fragmentColor = vertexColor;
+    fragmentTime = time;
 }
-
 )";
 constexpr const char* FRAGMENT_SHADER_SOURCE = R"(#version 330 core
 
-// Interpolated values from the vertex shaders
 in vec3 fragmentColor;
+in float fragmentTime;
 
-// Ouput data
 out vec3 color;
 
-void main(){
-
-	// Output color = color specified in the vertex shader, 
-	// interpolated between all 3 surrounding vertices
-	color = fragmentColor;
-
+void main()
+{
+    color = vec3(fragmentColor.x + abs(sin(fragmentTime)) / 10,
+                 fragmentColor.y + abs(cos(fragmentTime)) / 10,
+                 cos(fragmentTime));
 })";
