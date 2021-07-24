@@ -118,6 +118,7 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+    stbi_set_flip_vertically_on_load(1);
     int w, h, n;
     auto tsodin_flushed = stbi_load("assets/tsodinFlushed.png", &w, &h, &n, 4);
 
@@ -196,10 +197,9 @@ int main()
     double dt;
     double last_frame = glfwGetTime();
 
-    float x0 = 1.0f, y0 = 1.0f, 
-	  x1 = 0.0f, y1 = 0.0f, 
-	  x2 = 1.0f, y2 = 0.0f, 
-	  x3 = 0.0f, y3 = 0.0f;
+    float x0 = 0.0f, y0 = 0.0f, 
+	  x1 = 1.0f, y1 = 0.0f, 
+	  x2 = 1.0f, y2 = 1.0f; 
     do
     {
         double current_frame = glfwGetTime();
@@ -285,11 +285,21 @@ int main()
             printf("\n(%.2f, %.2f)\n(%.2f, %.2f)\n(%.2f, %.2f)\n", x0, y0, x1, y1, x2, y2);
 
         GLfloat g_uv_buffer_data[] = {
-	    x0, y0,
-	    x1, y1,
-	    x2, y2,
-	    x3, y3,
-	};
+	        0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+            0.0f, 0.0f,
+            
+            0.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, 0.0f,
+        };
 
         GLuint uv_buffer;
         glGenBuffers(1, &uv_buffer);
@@ -311,7 +321,7 @@ int main()
         glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
         glVertexAttribPointer(
             1,
-            3,
+            2,
             GL_FLOAT,
             GL_FALSE,
             0,
