@@ -196,7 +196,10 @@ int main()
     double dt;
     double last_frame = glfwGetTime();
 
-    float x0 = 0.0f, y0 = 0.0f, x1 = 0.0f, y1 = 0.0f, x2 = 0.0f, y2 = 0.0f;
+    float x0 = 1.0f, y0 = 1.0f, 
+	  x1 = 0.0f, y1 = 0.0f, 
+	  x2 = 1.0f, y2 = 0.0f, 
+	  x3 = 0.0f, y3 = 0.0f;
     do
     {
         double current_frame = glfwGetTime();
@@ -219,76 +222,74 @@ int main()
         bool print_uv = false; 
         if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
         {
-            x0 += 0.05f;
+            x0 += 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
         {
-            x1 += 0.05f;
+            x1 += 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
         {
-            x2 += 0.05f;
+            x2 += 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
         {
-            y0 += 0.05f;
+            y0 += 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
         {
-            y1 += 0.05f;
+            y1 += 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
         {
-            y2 += 0.05f;
+            y2 += 0.01f;
             print_uv = true;
         }
         
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
         {
-            x0 -= 0.05f;
+            x0 -= 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
         {
-            x1 -= 0.05f;
+            x1 -= 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
         {
-            x2 -= 0.05f;
+            x2 -= 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
         {
-            y0 -= 0.05f;
+            y0 -= 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
         {
-            y1 -= 0.05f;
+            y1 -= 0.01f;
             print_uv = true;
         }
         if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
         {
-            y2 -= 0.05f;
+            y2 -= 0.01f;
             print_uv = true;
         }
         if (print_uv)
             printf("\n(%.2f, %.2f)\n(%.2f, %.2f)\n(%.2f, %.2f)\n", x0, y0, x1, y1, x2, y2);
 
         GLfloat g_uv_buffer_data[] = {
-            0.0f, 0.0f,
-            0.0f, 0.0f,
-            0.0f, 0.0f,
-            x0, y0,
-            x1, y1,
-            x2, y2,
-        };
+	    x0, y0,
+	    x1, y1,
+	    x2, y2,
+	    x3, y3,
+	};
 
         GLuint uv_buffer;
         glGenBuffers(1, &uv_buffer);
