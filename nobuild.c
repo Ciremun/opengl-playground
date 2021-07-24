@@ -54,6 +54,11 @@ char *read_file_as_str(const char *fp, size_t *nch)
     return buf;
 }
 
+void build(const char* cxx)
+{
+    CMD(cxx, SOURCES, CXXFLAGS, "-oopengl-playground", LIBS);
+}
+
 int main(int argc, char **argv)
 {
     GO_REBUILD_URSELF(argc, argv);
@@ -84,11 +89,20 @@ int main(int argc, char **argv)
         free(fragment_shader_source);
     }
 
-    CMD(cxx, SOURCES, CXXFLAGS, "-oopengl-playground", LIBS);
-
     if (argc > 1)
     {
         if (strcmp(argv[1], "run") == 0)
+        {
+            build(cxx);
             CMD(RUN);
+        }
+        else if (strcmp(argv[1], "fmt") == 0)
+        {
+            CMD("astyle", "src/*.cpp", "src/*.h", "-n", "-r", "--style=kr");
+        }
+    }
+    else
+    {
+        build(cxx);
     }
 }

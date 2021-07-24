@@ -45,8 +45,7 @@ void compile_shader(GLuint shader_id, const char *shader_source)
     glCompileShader(shader_id);
     glGetShaderiv(shader_id, GL_COMPILE_STATUS, &compiled);
 
-    if (compiled != GL_TRUE)
-    {
+    if (compiled != GL_TRUE) {
         GLchar buffer[1024] = {0};
         GLsizei length = 0;
         glGetShaderInfoLog(shader_id, sizeof(buffer), &length, buffer);
@@ -70,8 +69,7 @@ GLuint load_shaders()
     GLint linked = 0;
     glGetProgramiv(program_id, GL_LINK_STATUS, &linked);
 
-    if (linked != GL_TRUE)
-    {
+    if (linked != GL_TRUE) {
         GLchar buffer[1024] = {0};
         GLsizei length = 0;
         glGetProgramInfoLog(program_id, sizeof(buffer), &length, buffer);
@@ -87,6 +85,78 @@ GLuint load_shaders()
     return program_id;
 }
 
+void calc_uv_coords(const GLfloat *vs, size_t size, GLfloat *out_uv)
+{
+ // -1.0f, -1.0f, -1.0f,
+ // -1.0f, -1.0f, 1.0f,
+ // -1.0f,  1.0f, 1.0f,
+ 
+ // 0.0f, 0.0f,
+ // 0.0f, 1.0f,
+ // 1.0f, 1.0f,
+
+    auto v_to_uv = [](float v) -> float { return v > 0 ? 1.0f : 0.0f; };
+
+    printf("size: %lld\n", size);
+   for (size_t v = 0; v < size;)
+   {
+        float v0 = floorf(vs[v]);
+        float v1 = floorf(vs[v+1]);
+        float v2 = floorf(vs[v+2]);
+        float v3 = floorf(vs[v+3]);
+        float v4 = floorf(vs[v+4]);
+        float v5 = floorf(vs[v+5]);
+        float v6 = floorf(vs[v+6]);
+        float v7 = floorf(vs[v+7]);
+        float v8 = floorf(vs[v+8]);
+        int skip_col;
+        printf("v0: %.2f\nv1: %.2f\nv2: %.2f\nv3: %.2f\nv4: %.2f\nv5: %.2f\nv6: %.2f\nv7: %.2f\nv8: %.2f\n", v0, v1, v2, v3, v4, v5, v6, v7, v8);
+        if (v0 == v3 && v0 == v6)
+            skip_col = 0;
+        else if (v1 == v4 && v1 == v7)
+            skip_col = 1;
+        else if (v2 == v5 && v2 == v8)
+            skip_col = 2;
+        else
+            PANIC("unreachable%s", "");
+        switch (skip_col)
+        {
+            case 0:
+                {
+                    out_uv[v] = v_to_uv(v1);
+                    out_uv[v+1] = v_to_uv(v2);
+                    out_uv[v+2] = v_to_uv(v4);
+                    out_uv[v+3] = v_to_uv(v5);
+                    out_uv[v+4] = v_to_uv(v7);
+                    out_uv[v+5] = v_to_uv(v8);
+                } break;
+            case 1:
+                {
+                    out_uv[v] = v_to_uv(v0);
+                    out_uv[v+1] = v_to_uv(v2);
+                    out_uv[v+2] = v_to_uv(v3);
+                    out_uv[v+3] = v_to_uv(v5);
+                    out_uv[v+4] = v_to_uv(v6);
+                    out_uv[v+5] = v_to_uv(v8);
+                } break;
+            case 2:
+                {
+                    out_uv[v] = v_to_uv(v0);
+                    out_uv[v+1] = v_to_uv(v1);
+                    out_uv[v+2] = v_to_uv(v3);
+                    out_uv[v+3] = v_to_uv(v4);
+                    out_uv[v+4] = v_to_uv(v6);
+                    out_uv[v+5] = v_to_uv(v7);
+                } break;
+            default:
+                {
+                    PANIC("unreachable%s", "");
+                } break;
+        }
+        v += 9;
+   }
+}
+
 int main()
 {
     GLFWwindow *window;
@@ -100,8 +170,7 @@ int main()
 
     window = glfwCreateWindow(WIDTH, HEIGHT, "opengl-playground", nullptr, nullptr);
 
-    if (!window)
-    {
+    if (!window) {
         glfwTerminate();
         return 1;
     }
@@ -109,8 +178,7 @@ int main()
     glfwMakeContextCurrent(window);
 
     glewExperimental = true;
-    if (glewInit() != GLEW_OK)
-    {
+    if (glewInit() != GLEW_OK) {
         return 1;
     }
 
@@ -134,7 +202,7 @@ int main()
     GLuint vertex_array_id;
     glGenVertexArrays(1, &vertex_array_id);
     glBindVertexArray(vertex_array_id);
-    
+
     GLuint program_id = load_shaders();
 
     GLuint matrix_id = glGetUniformLocation(program_id, "MVP");
@@ -142,7 +210,6 @@ int main()
 
     auto projection = glm::perspective(glm::radians(90.0f), 4.0f / 3.0f, 0.1f, 100.0f);
     auto model = glm::mat4(1.0f);
-    auto model_2 = glm::translate(model, glm::vec3(5.0f, 0.0f, 0.0f));
 
     static const GLfloat g_vertex_buffer_data[] = {
         -1.0f, -1.0f, -1.0f,
@@ -153,13 +220,13 @@ int main()
         -1.0f,  1.0f,  1.0f,
         -1.0f,  1.0f, -1.0f,
 
-         1.0f,  1.0f, -1.0f,
+        1.0f,  1.0f, -1.0f,
         -1.0f, -1.0f, -1.0f,
         -1.0f,  1.0f, -1.0f,
 
-         1.0f, -1.0f,  1.0f,
+        1.0f, -1.0f,  1.0f,
         -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
 
         1.0f, 1.0f, -1.0f,
         1.0f, -1.0f, -1.0f,
@@ -192,14 +259,39 @@ int main()
         1.0f, 1.0f, 1.0f,
         -1.0f, 1.0f, 1.0f,
         1.0f, -1.0f, 1.0f
-    };
+        };
+
+    static GLfloat g_uv_buffer_data[sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]) - sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]) / 3];
+
+    calc_uv_coords(g_vertex_buffer_data, sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]), g_uv_buffer_data);
+
+    for (size_t i = 0; i < sizeof(g_uv_buffer_data) / sizeof(g_uv_buffer_data[0]); i += 6)
+    {
+        printf("%.2f, %.2f\n%.2f, %.2f\n%.2f, %.2f\n\n", g_uv_buffer_data[i], g_uv_buffer_data[i+1], g_uv_buffer_data[i+2], g_uv_buffer_data[i+3], g_uv_buffer_data[i+4], g_uv_buffer_data[i+5]);
+    }
+
+    GLuint uv_buffer;
+    glGenBuffers(1, &uv_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
+
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tsodin_flushed);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    auto position = glm::vec3(2.6, 2.0, 3.5);
+    auto position = glm::vec3(0.0, 2.0, 3.5);
 
     float horizontal_angle = 3.15f;
     float vertical_angle = -0.63f;
@@ -209,11 +301,7 @@ int main()
     double dt;
     double last_frame = glfwGetTime();
 
-    float x0 = 0.0f, y0 = 0.0f, 
-	  x1 = 1.0f, y1 = 0.0f, 
-	  x2 = 1.0f, y2 = 1.0f; 
-    do
-    {
+    do {
         double current_frame = glfwGetTime();
         dt = current_frame - last_frame;
         last_frame = current_frame;
@@ -230,97 +318,6 @@ int main()
             GL_FALSE,
             0,
             (void *)0);
-
-        bool print_uv = false; 
-        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-        {
-            x0 += 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-        {
-            x1 += 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
-        {
-            x2 += 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-        {
-            y0 += 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-        {
-            y1 += 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-        {
-            y2 += 0.01f;
-            print_uv = true;
-        }
-        
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-        {
-            x0 -= 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
-        {
-            x1 -= 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
-        {
-            x2 -= 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-        {
-            y0 -= 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-        {
-            y1 -= 0.01f;
-            print_uv = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-        {
-            y2 -= 0.01f;
-            print_uv = true;
-        }
-        if (print_uv)
-            printf("\n(%.2f, %.2f)\n(%.2f, %.2f)\n(%.2f, %.2f)\n", x0, y0, x1, y1, x2, y2);
-
-        GLfloat g_uv_buffer_data[] = {
-	        0.0f, 0.0f,
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-
-            0.0f, 0.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f,
-        };
-
-        GLuint uv_buffer;
-        glGenBuffers(1, &uv_buffer);
-        glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
-        
-        GLuint textureID;
-        glGenTextures(1, &textureID);
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tsodin_flushed);
-        glGenerateMipmap(GL_TEXTURE_2D); 
 
         glEnableVertexAttribArray(1);
         glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
@@ -361,11 +358,6 @@ int main()
 
         glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
         glUniform1f(time_id, current_frame);
-        glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
-
-        mvp = view_projection * model_2;
-
-        glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
 
         glDisableVertexAttribArray(0);
