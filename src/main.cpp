@@ -5,6 +5,9 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <cstdio>
 #include <string>
 #include <unordered_map>
@@ -115,6 +118,9 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+    int w, h, n;
+    auto tsodin_flushed = stbi_load("assets/tsodinFlushed.png", &w, &h, &n, 4);
+
     printf("%s\n", glGetString(GL_VERSION));
 
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -127,7 +133,7 @@ int main()
     GLuint vertex_array_id;
     glGenVertexArrays(1, &vertex_array_id);
     glBindVertexArray(vertex_array_id);
-
+    
     GLuint program_id = load_shaders();
 
     GLuint matrix_id = glGetUniformLocation(program_id, "MVP");
@@ -135,6 +141,7 @@ int main()
 
     auto projection = glm::perspective(glm::radians(90.0f), 4.0f / 3.0f, 0.1f, 100.0f);
     auto model = glm::mat4(1.0f);
+    auto model_2 = glm::translate(model, glm::vec3(5.0f, 0.0f, 0.0f));
 
     static const GLfloat g_vertex_buffer_data[] = {
         -1.0f, -1.0f, -1.0f,
@@ -174,53 +181,10 @@ int main()
         -1.0f, 1.0f, 1.0f,
         1.0f, -1.0f, 1.0f};
 
-    static const GLfloat g_color_buffer_data[] = {
-        0.583f, 0.771f, 0.014f,
-        0.609f, 0.115f, 0.436f,
-        0.327f, 0.483f, 0.844f,
-        0.822f, 0.569f, 0.201f,
-        0.435f, 0.602f, 0.223f,
-        0.310f, 0.747f, 0.185f,
-        0.597f, 0.770f, 0.761f,
-        0.559f, 0.436f, 0.730f,
-        0.359f, 0.583f, 0.152f,
-        0.483f, 0.596f, 0.789f,
-        0.559f, 0.861f, 0.639f,
-        0.195f, 0.548f, 0.859f,
-        0.014f, 0.184f, 0.576f,
-        0.771f, 0.328f, 0.970f,
-        0.406f, 0.615f, 0.116f,
-        0.676f, 0.977f, 0.133f,
-        0.971f, 0.572f, 0.833f,
-        0.140f, 0.616f, 0.489f,
-        0.997f, 0.513f, 0.064f,
-        0.945f, 0.719f, 0.592f,
-        0.543f, 0.021f, 0.978f,
-        0.279f, 0.317f, 0.505f,
-        0.167f, 0.620f, 0.077f,
-        0.347f, 0.857f, 0.137f,
-        0.055f, 0.953f, 0.042f,
-        0.714f, 0.505f, 0.345f,
-        0.783f, 0.290f, 0.734f,
-        0.722f, 0.645f, 0.174f,
-        0.302f, 0.455f, 0.848f,
-        0.225f, 0.587f, 0.040f,
-        0.517f, 0.713f, 0.338f,
-        0.053f, 0.959f, 0.120f,
-        0.393f, 0.621f, 0.362f,
-        0.673f, 0.211f, 0.457f,
-        0.820f, 0.883f, 0.371f,
-        0.982f, 0.099f, 0.879f};
-
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    GLuint color_buffer;
-    glGenBuffers(1, &color_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
 
     auto position = glm::vec3(2.6, 2.0, 3.5);
 
@@ -232,6 +196,7 @@ int main()
     double dt;
     double last_frame = glfwGetTime();
 
+    float x0 = 0.0f, y0 = 0.0f, x1 = 0.0f, y1 = 0.0f, x2 = 0.0f, y2 = 0.0f;
     do
     {
         double current_frame = glfwGetTime();
@@ -251,8 +216,98 @@ int main()
             0,
             (void *)0);
 
+        bool print_uv = false; 
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+        {
+            x0 += 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+        {
+            x1 += 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+        {
+            x2 += 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+        {
+            y0 += 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+        {
+            y1 += 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+        {
+            y2 += 0.05f;
+            print_uv = true;
+        }
+        
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+        {
+            x0 -= 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+        {
+            x1 -= 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+        {
+            x2 -= 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        {
+            y0 -= 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+        {
+            y1 -= 0.05f;
+            print_uv = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+        {
+            y2 -= 0.05f;
+            print_uv = true;
+        }
+        if (print_uv)
+            printf("\n(%.2f, %.2f)\n(%.2f, %.2f)\n(%.2f, %.2f)\n", x0, y0, x1, y1, x2, y2);
+
+        GLfloat g_uv_buffer_data[] = {
+            0.0f, 0.0f,
+            0.0f, 0.0f,
+            0.0f, 0.0f,
+            x0, y0,
+            x1, y1,
+            x2, y2,
+        };
+
+        GLuint uv_buffer;
+        glGenBuffers(1, &uv_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data), g_uv_buffer_data, GL_STATIC_DRAW);
+        
+        GLuint textureID;
+        glGenTextures(1, &textureID);
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tsodin_flushed);
+        glGenerateMipmap(GL_TEXTURE_2D); 
+
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, color_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
         glVertexAttribPointer(
             1,
             3,
@@ -285,11 +340,16 @@ int main()
         glfwSetCursorPos(window, (float)WIDTH / 2.0f, (float)HEIGHT / 2.0f);
 
         auto view = glm::lookAt(position, position + direction, glm::vec3(0.0f, 1.0f, 0.0f));
-        auto mvp = projection * view * model;
+        auto view_projection = projection * view;
+        auto mvp = view_projection * model;
 
         glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
         glUniform1f(time_id, current_frame);
+        glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
 
+        mvp = view_projection * model_2;
+
+        glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
         glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
 
         glDisableVertexAttribArray(0);

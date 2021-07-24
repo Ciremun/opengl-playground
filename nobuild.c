@@ -62,6 +62,11 @@ int main(int argc, char **argv)
     if (cxx == 0)
         cxx = "g++";
 
+    if (!PATH_EXISTS("src/stb_image.h"))
+    {
+        system("wget https://raw.githubusercontent.com/nothings/stb/master/stb_image.h -O src/stb_image.h");
+    }
+
     if (PATH_EXISTS(FILENAME) && (is_path1_modified_after_path2("src/shaders/vertex.glsl", FILENAME) ||
         is_path1_modified_after_path2("src/shaders/fragment.glsl", FILENAME)))
     {
