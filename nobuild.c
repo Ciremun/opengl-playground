@@ -22,7 +22,7 @@
 
 // TODO(#3): wget glm
 
-// TODO: replace system() with CMD()
+// TODO(#4): replace system() with CMD()
 
 char *read_file_as_str(const char *fp, size_t *nch)
 {
