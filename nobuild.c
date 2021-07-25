@@ -19,6 +19,7 @@
 #endif
 
 #define CXXFLAGS "-Wall", "-Wextra", "-pedantic", "-std=c++17", "-ggdb", "-O0"
+#define STB_IMAGE_URL "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h"
 
 // TODO(#3): wget glm
 
@@ -73,7 +74,7 @@ int main(int argc, char **argv)
 
     if (!PATH_EXISTS("src/stb_image.h"))
     {
-        system("wget https://raw.githubusercontent.com/nothings/stb/master/stb_image.h -O src/stb_image.h");
+        CMD("wget", STB_IMAGE_URL, "-O", "src/stb_image.h");
     }
 
     if (PATH_EXISTS(FILENAME) && (is_path1_modified_after_path2("src/shaders/vertex.glsl", FILENAME) ||
