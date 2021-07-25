@@ -24,7 +24,7 @@
         exit(1);                                               \
     } while (0)
 
-// TODO: cleanup
+// TODO(#2): cleanup
 // macro for sizeof(a)/sizeof(a[0])
 // renames
 
