@@ -20,6 +20,10 @@
 
 #define CXXFLAGS "-Wall", "-Wextra", "-pedantic", "-std=c++17", "-ggdb", "-O0"
 
+// TODO(#3): wget glm
+
+// TODO: replace system() with CMD()
+
 char *read_file_as_str(const char *fp, size_t *nch)
 {
     size_t nch_;
