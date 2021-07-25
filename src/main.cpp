@@ -24,6 +24,10 @@
         exit(1);                                               \
     } while (0)
 
+// TODO: cleanup
+// macro for sizeof(a)/sizeof(a[0])
+// renames
+
 std::unordered_map<std::string, int> m_UniformLocationCache;
 
 int GetUniformLocation(GLuint program_id, const std::string &name)
@@ -87,19 +91,17 @@ GLuint load_shaders()
 
 void calc_uv_coords(const GLfloat *vs, size_t size, GLfloat *out_uv)
 {
- // -1.0f, -1.0f, -1.0f,
- // -1.0f, -1.0f, 1.0f,
- // -1.0f,  1.0f, 1.0f,
- 
- // 0.0f, 0.0f,
- // 0.0f, 1.0f,
- // 1.0f, 1.0f,
+// -1.0f, -1.0f, -1.0f,
+// -1.0f, -1.0f, 1.0f,
+// -1.0f,  1.0f, 1.0f,
+
+// 0.0f, 0.0f,
+// 0.0f, 1.0f,
+// 1.0f, 1.0f,
 
     auto v_to_uv = [](float v) -> float { return v > 0 ? 1.0f : 0.0f; };
 
-    printf("size: %lld\n", size);
-   for (size_t v = 0; v < size;)
-   {
+    for (size_t v = 0, u = 0; v < size; v += 9, u += 6) {
         float v0 = floorf(vs[v]);
         float v1 = floorf(vs[v+1]);
         float v2 = floorf(vs[v+2]);
@@ -110,7 +112,6 @@ void calc_uv_coords(const GLfloat *vs, size_t size, GLfloat *out_uv)
         float v7 = floorf(vs[v+7]);
         float v8 = floorf(vs[v+8]);
         int skip_col;
-        printf("v0: %.2f\nv1: %.2f\nv2: %.2f\nv3: %.2f\nv4: %.2f\nv5: %.2f\nv6: %.2f\nv7: %.2f\nv8: %.2f\n", v0, v1, v2, v3, v4, v5, v6, v7, v8);
         if (v0 == v3 && v0 == v6)
             skip_col = 0;
         else if (v1 == v4 && v1 == v7)
@@ -119,42 +120,40 @@ void calc_uv_coords(const GLfloat *vs, size_t size, GLfloat *out_uv)
             skip_col = 2;
         else
             PANIC("unreachable%s", "");
-        switch (skip_col)
-        {
-            case 0:
-                {
-                    out_uv[v] = v_to_uv(v1);
-                    out_uv[v+1] = v_to_uv(v2);
-                    out_uv[v+2] = v_to_uv(v4);
-                    out_uv[v+3] = v_to_uv(v5);
-                    out_uv[v+4] = v_to_uv(v7);
-                    out_uv[v+5] = v_to_uv(v8);
-                } break;
-            case 1:
-                {
-                    out_uv[v] = v_to_uv(v0);
-                    out_uv[v+1] = v_to_uv(v2);
-                    out_uv[v+2] = v_to_uv(v3);
-                    out_uv[v+3] = v_to_uv(v5);
-                    out_uv[v+4] = v_to_uv(v6);
-                    out_uv[v+5] = v_to_uv(v8);
-                } break;
-            case 2:
-                {
-                    out_uv[v] = v_to_uv(v0);
-                    out_uv[v+1] = v_to_uv(v1);
-                    out_uv[v+2] = v_to_uv(v3);
-                    out_uv[v+3] = v_to_uv(v4);
-                    out_uv[v+4] = v_to_uv(v6);
-                    out_uv[v+5] = v_to_uv(v7);
-                } break;
-            default:
-                {
-                    PANIC("unreachable%s", "");
-                } break;
+        switch (skip_col) {
+        case 0: {
+            out_uv[u] = v_to_uv(v1);
+            out_uv[u+1] = v_to_uv(v2);
+            out_uv[u+2] = v_to_uv(v4);
+            out_uv[u+3] = v_to_uv(v5);
+            out_uv[u+4] = v_to_uv(v7);
+            out_uv[u+5] = v_to_uv(v8);
         }
-        v += 9;
-   }
+        break;
+        case 1: {
+            out_uv[u] = v_to_uv(v0);
+            out_uv[u+1] = v_to_uv(v2);
+            out_uv[u+2] = v_to_uv(v3);
+            out_uv[u+3] = v_to_uv(v5);
+            out_uv[u+4] = v_to_uv(v6);
+            out_uv[u+5] = v_to_uv(v8);
+        }
+        break;
+        case 2: {
+            out_uv[u] = v_to_uv(v0);
+            out_uv[u+1] = v_to_uv(v1);
+            out_uv[u+2] = v_to_uv(v3);
+            out_uv[u+3] = v_to_uv(v4);
+            out_uv[u+4] = v_to_uv(v6);
+            out_uv[u+5] = v_to_uv(v7);
+        }
+        break;
+        default: {
+            PANIC("unreachable%s", "");
+        }
+        break;
+        }
+    }
 }
 
 int main()
@@ -213,62 +212,57 @@ int main()
 
     static const GLfloat g_vertex_buffer_data[] = {
         -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, 1.0f,
-        -1.0f,  1.0f, 1.0f,
+            -1.0f, -1.0f, 1.0f,
+            -1.0f,  1.0f, 1.0f,
 
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f, -1.0f,
 
-        1.0f,  1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
+            1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
 
-        1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
 
-        1.0f, 1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
+            1.0f, 1.0f, -1.0f,
+            1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
 
-        1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
+            1.0f, -1.0f, 1.0f,
+            -1.0f, -1.0f, 1.0f,
+            -1.0f, -1.0f, -1.0f,
 
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
+            -1.0f, 1.0f, 1.0f,
+            -1.0f, -1.0f, 1.0f,
+            1.0f, -1.0f, 1.0f,
 
-        1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, -1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, -1.0f,
+            1.0f, 1.0f, -1.0f,
 
-        1.0f, -1.0f, -1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f,
+            1.0f, -1.0f, -1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 1.0f,
 
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, -1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, -1.0f,
+            -1.0f, 1.0f, -1.0f,
 
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, -1.0f,
-        -1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, -1.0f,
+            -1.0f, 1.0f, 1.0f,
 
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 1.0f
+            1.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 1.0f
         };
 
     static GLfloat g_uv_buffer_data[sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]) - sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]) / 3];
 
     calc_uv_coords(g_vertex_buffer_data, sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]), g_uv_buffer_data);
-
-    for (size_t i = 0; i < sizeof(g_uv_buffer_data) / sizeof(g_uv_buffer_data[0]); i += 6)
-    {
-        printf("%.2f, %.2f\n%.2f, %.2f\n%.2f, %.2f\n\n", g_uv_buffer_data[i], g_uv_buffer_data[i+1], g_uv_buffer_data[i+2], g_uv_buffer_data[i+3], g_uv_buffer_data[i+4], g_uv_buffer_data[i+5]);
-    }
 
     GLuint uv_buffer;
     glGenBuffers(1, &uv_buffer);
