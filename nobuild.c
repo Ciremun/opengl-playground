@@ -21,8 +21,6 @@
 #define CXXFLAGS "-Wall", "-Wextra", "-pedantic", "-std=c++17", "-ggdb", "-O0"
 #define STB_IMAGE_URL "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h"
 
-// TODO(#3): wget glm
-
 char *read_file_as_str(const char *fp, size_t *nch)
 {
     size_t nch_;
