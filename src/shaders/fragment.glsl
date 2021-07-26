@@ -9,5 +9,7 @@ uniform sampler2D u_texture;
 
 void main()
 {
-    color = texture(u_texture, uv).rgb;
+    vec3 tex = texture(u_texture, uv).rgb;
+    vec3 effect = vec3(1.0, 1.0, 1.0) / abs(sin(fragmentTime)) / 2.0;
+    color = tex * effect;
 }
