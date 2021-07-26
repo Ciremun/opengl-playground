@@ -21,14 +21,9 @@
 #define CXXFLAGS "-Wall", "-Wextra", "-pedantic", "-std=c++17", "-ggdb", "-O0"
 #define STB_IMAGE_URL "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h"
 
-char *read_file_as_str(const char *fp, size_t *nch)
+char *read_file_as_str(const char *fp)
 {
-    size_t nch_;
-    if (nch == 0)
-    {
-        nch_ = 0;
-        nch = &nch_;
-    }
+    size_t nch = 0;
     FILE *f = fopen(fp, "r");
     if (f == 0)
         PANIC("ERROR:%d: opening file %s\n", __LINE__, fp);
@@ -40,34 +35,23 @@ char *read_file_as_str(const char *fp, size_t *nch)
 
     while ((c = getc(f)) != EOF)
     {
-        if (*nch >= size - 1)
+        if (nch >= size - 1)
         {
             size *= 2;
             buf = realloc(buf, size);
             if (buf == 0)
                 PANIC("ERROR:%d: memory allocation failed\n", __LINE__);
         }
-        buf[(*nch)++] = c;
+        buf[nch++] = c;
     }
 
-    buf[(*nch)++] = 0;
+    buf[nch++] = 0;
     fclose(f);
     return buf;
 }
 
 void build(const char* cxx)
 {
-    CMD(cxx, SOURCES, CXXFLAGS, "-oopengl-playground", LIBS);
-}
-
-int main(int argc, char **argv)
-{
-    GO_REBUILD_URSELF(argc, argv);
-
-    char *cxx = getenv("cxx");
-    if (cxx == 0)
-        cxx = "g++";
-
     if (!PATH_EXISTS("src/stb_image.h"))
     {
         CMD("wget", STB_IMAGE_URL, "-O", "src/stb_image.h");
@@ -76,8 +60,8 @@ int main(int argc, char **argv)
     if (PATH_EXISTS(FILENAME) && (is_path1_modified_after_path2("src/shaders/vertex.glsl", FILENAME) ||
         is_path1_modified_after_path2("src/shaders/fragment.glsl", FILENAME)))
     {
-        char *vertex_shader_source = read_file_as_str("src/shaders/vertex.glsl", 0);
-        char *fragment_shader_source = read_file_as_str("src/shaders/fragment.glsl", 0);
+        char *vertex_shader_source = read_file_as_str("src/shaders/vertex.glsl");
+        char *fragment_shader_source = read_file_as_str("src/shaders/fragment.glsl");
 
         FILE *f = fopen("src/shaders.h", "wb");
         if (f == 0)
@@ -89,6 +73,17 @@ int main(int argc, char **argv)
         free(vertex_shader_source);
         free(fragment_shader_source);
     }
+
+    CMD(cxx, SOURCES, CXXFLAGS, "-oopengl-playground", LIBS);
+}
+
+int main(int argc, char **argv)
+{
+    GO_REBUILD_URSELF(argc, argv);
+
+    char *cxx = getenv("cxx");
+    if (cxx == 0)
+        cxx = "g++";
 
     if (argc > 1)
     {
