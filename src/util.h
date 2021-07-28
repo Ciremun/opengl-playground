@@ -1,4 +1,4 @@
-#ifndef UTIL_H_
+#ifndef UTIL_H
 #define UTIL_H
 
 #include <stdio.h>
