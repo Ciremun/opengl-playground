@@ -37,10 +37,8 @@ char *read_file_as_str(const char *fp)
     if (buf == 0)
         PANIC("ERROR: memory allocation failed%s\n", "");
 
-    while ((c = getc(f)) != EOF)
-    {
-        if (nch >= size - 1)
-        {
+    while ((c = getc(f)) != EOF) {
+        if (nch >= size - 1) {
             size *= 2;
             buf = (char *)realloc(buf, size);
             if (buf == 0)
