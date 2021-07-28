@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define UTIL_IMPLEMENTATION
+#include "src/util.h"
+
 #define SOURCES "src/main.cpp"
 #define OUTPUT "opengl-playground"
 
@@ -14,41 +17,17 @@
 #define RUN ".\\" FILENAME
 #else
 #define LIBS "-lGLEW", "-lglfw", "-lGL"
-#define RUN "./" OUTPUT
 #define FILENAME OUTPUT
+#define RUN "./" OUTPUT
 #endif
 
-#define CXXFLAGS "-Wall", "-Wextra", "-pedantic", "-std=c++17", "-ggdb", "-O0"
 #define STB_IMAGE_URL "https://raw.githubusercontent.com/nothings/stb/master/stb_image.h"
 
-char *read_file_as_str(const char *fp)
-{
-    size_t nch = 0;
-    FILE *f = fopen(fp, "r");
-    if (f == 0)
-        PANIC("ERROR:%d: opening file %s\n", __LINE__, fp);
-    int c;
-    size_t size = 1024;
-    char *buf = malloc(size);
-    if (buf == 0)
-        PANIC("ERROR:%d: memory allocation failed\n", __LINE__);
-
-    while ((c = getc(f)) != EOF)
-    {
-        if (nch >= size - 1)
-        {
-            size *= 2;
-            buf = realloc(buf, size);
-            if (buf == 0)
-                PANIC("ERROR:%d: memory allocation failed\n", __LINE__);
-        }
-        buf[nch++] = c;
-    }
-
-    buf[nch++] = 0;
-    fclose(f);
-    return buf;
-}
+#ifdef NDEBUG
+#define CXXFLAGS "-DNDEBUG", "-std=c++17", "-g0", "-O3"
+#else
+#define CXXFLAGS "-Wall", "-Wextra", "-pedantic", "-std=c++17", "-ggdb", "-O0"
+#endif
 
 void build(const char* cxx)
 {
@@ -57,15 +36,14 @@ void build(const char* cxx)
         CMD("wget", STB_IMAGE_URL, "-O", "src/stb_image.h");
     }
 
-    if (PATH_EXISTS(FILENAME) && (is_path1_modified_after_path2("src/shaders/vertex.glsl", FILENAME) ||
-        is_path1_modified_after_path2("src/shaders/fragment.glsl", FILENAME)))
+#ifdef NDEBUG
     {
         char *vertex_shader_source = read_file_as_str("src/shaders/vertex.glsl");
         char *fragment_shader_source = read_file_as_str("src/shaders/fragment.glsl");
 
-        FILE *f = fopen("src/shaders.h", "wb");
+        FILE *f = fopen("src/baked_shaders.h", "wb");
         if (f == 0)
-            PANIC("ERROR:%d: opening file %s\n", __LINE__, "src/shaders.h");
+            PANIC("ERROR:%d: opening file %s\n", __LINE__, "src/baked_shaders.h");
         fprintf(f, "constexpr const char* VERTEX_SHADER_SOURCE = R\"(%s)\";\n", vertex_shader_source);
         fprintf(f, "constexpr const char* FRAGMENT_SHADER_SOURCE = R\"(%s)\";", fragment_shader_source);
         fclose(f);
@@ -73,6 +51,7 @@ void build(const char* cxx)
         free(vertex_shader_source);
         free(fragment_shader_source);
     }
+#endif
 
     CMD(cxx, SOURCES, CXXFLAGS, "-oopengl-playground", LIBS);
 }

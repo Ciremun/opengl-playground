@@ -1,5 +1,6 @@
 .vscode/
 src/stb_image.h
+src/baked_shaders.h
 
 *.obj
 *.exe

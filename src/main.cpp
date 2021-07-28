@@ -12,17 +12,15 @@
 #include <string>
 #include <unordered_map>
 
-#include "shaders.h"
+#ifdef NDEBUG
+#include "baked_shaders.h"
+#endif
+
+#define UTIL_IMPLEMENTATION
+#include "util.h"
 
 #define WIDTH 1024
 #define HEIGHT 768
-
-#define PANIC(fmt, ...)                                        \
-    do                                                         \
-    {                                                          \
-        printf("ERROR: %d: " fmt "\n", __LINE__, __VA_ARGS__); \
-        exit(1);                                               \
-    } while (0)
 
 #define COUNT(a) (sizeof(a) / sizeof(a[0]))
 
@@ -60,8 +58,17 @@ GLuint load_shaders()
     GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
 
+#ifdef NDEBUG
     compile_shader(vertex_shader_id, VERTEX_SHADER_SOURCE);
     compile_shader(fragment_shader_id, FRAGMENT_SHADER_SOURCE);
+#else
+    char* vertex_shader_source = read_file_as_str("src/shaders/vertex.glsl");
+    char* fragment_shader_source = read_file_as_str("src/shaders/fragment.glsl");
+    compile_shader(vertex_shader_id, vertex_shader_source);
+    compile_shader(fragment_shader_id, fragment_shader_source);
+    free(vertex_shader_source);
+    free(fragment_shader_source);
+#endif // NDEBUG
 
     GLuint program_id = glCreateProgram();
     glAttachShader(program_id, vertex_shader_id);
@@ -275,27 +282,16 @@ int main()
         last_frame = current_frame;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+#ifndef NDEBUG
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+        {
+            glDeleteProgram(program_id);
+            program_id = load_shaders();
+        }
+#endif
+
         glUseProgram(program_id);
-
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        glVertexAttribPointer(
-            0,
-            3,
-            GL_FLOAT,
-            GL_FALSE,
-            0,
-            (void *)0);
-
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
-        glVertexAttribPointer(
-            1,
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            0,
-            (void *)0);
 
         auto direction = glm::vec3(glm::cos(vertical_angle) * glm::sin(horizontal_angle),
                                    glm::sin(vertical_angle),
@@ -323,6 +319,26 @@ int main()
         auto view = glm::lookAt(position, position + direction, glm::vec3(0.0f, 1.0f, 0.0f));
         auto view_projection = projection * view;
         auto mvp = view_projection * model;
+
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        glVertexAttribPointer(
+            0,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            (void *)0);
+
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, uv_buffer);
+        glVertexAttribPointer(
+            1,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            (void *)0);
 
         glUniformMatrix4fv(matrix_id, 1, GL_FALSE, &mvp[0][0]);
         glUniform1f(time_id, current_frame);
