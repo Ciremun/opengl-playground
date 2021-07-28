@@ -284,8 +284,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #ifndef NDEBUG
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-        {
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
             glDeleteProgram(program_id);
             program_id = load_shaders();
         }
@@ -296,25 +295,29 @@ int main()
         auto direction = glm::vec3(glm::cos(vertical_angle) * glm::sin(horizontal_angle),
                                    glm::sin(vertical_angle),
                                    glm::cos(vertical_angle) * glm::cos(horizontal_angle));
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
 
-        horizontal_angle += mouse_speed * dt * ((float)WIDTH / 2.0f - xpos);
-        vertical_angle += mouse_speed * dt * ((float)HEIGHT / 2.0f - ypos);
+        int focused = glfwGetWindowAttrib(window, GLFW_FOCUSED);
+        if (focused) {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
 
-        auto right = glm::vec3(glm::sin(horizontal_angle - 3.14f / 2.0),
-                               0.0f,
-                               glm::cos(horizontal_angle - 3.14 / 2.0));
+            horizontal_angle += mouse_speed * dt * ((float)WIDTH / 2.0f - xpos);
+            vertical_angle += mouse_speed * dt * ((float)HEIGHT / 2.0f - ypos);
 
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            position = position + direction * static_cast<float>(dt) * speed;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            position = position - direction * static_cast<float>(dt) * speed;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            position = position + right * static_cast<float>(dt) * speed;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            position = position - right * static_cast<float>(dt) * speed;
-        glfwSetCursorPos(window, (float)WIDTH / 2.0f, (float)HEIGHT / 2.0f);
+            auto right = glm::vec3(glm::sin(horizontal_angle - 3.14f / 2.0),
+                                   0.0f,
+                                   glm::cos(horizontal_angle - 3.14 / 2.0));
+
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                position = position + direction * static_cast<float>(dt) * speed;
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                position = position - direction * static_cast<float>(dt) * speed;
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                position = position + right * static_cast<float>(dt) * speed;
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                position = position - right * static_cast<float>(dt) * speed;
+            glfwSetCursorPos(window, (float)WIDTH / 2.0f, (float)HEIGHT / 2.0f);
+        }
 
         auto view = glm::lookAt(position, position + direction, glm::vec3(0.0f, 1.0f, 0.0f));
         auto view_projection = projection * view;
